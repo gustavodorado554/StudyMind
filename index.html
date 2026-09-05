@@ -428,488 +428,429 @@
         // ==========================================
         // HISTÓRICO DA CONVERSA
         // ==========================================
-
+    
         let messages = [];
-
+    
         let loading = false;
-
-
+    
         // ==========================================
         // ELEMENTOS DO HTML
         // ==========================================
-
+    
         const chat = document.getElementById("chat");
-
+    
         const input = document.getElementById("messageInput");
-
+    
         const sendBtn = document.getElementById("sendBtn");
-
+    
         const newChatBtn = document.getElementById("newChatBtn");
-
+    
         const themeBtn = document.getElementById("themeBtn");
-
-        const welcome = document.getElementById("welcome");
-
-
+    
         // ==========================================
         // ROLAR CHAT PARA BAIXO
         // ==========================================
-
+    
         function scrollToBottom() {
-
+    
             chat.scrollTop = chat.scrollHeight;
-
+    
         }
-
-
+    
         // ==========================================
         // ADICIONAR MENSAGEM NA TELA
         // ==========================================
-
+    
         function addMessage(text, sender, type = "") {
-
-            const welcomeElement = document.getElementById("welcome");
-
+    
+            const welcomeElement =
+                document.getElementById("welcome");
+    
             if (welcomeElement) {
+    
                 welcomeElement.style.display = "none";
+    
             }
-
+    
             const message = document.createElement("div");
-
-            message.className = `message ${sender} ${type}`;
-
-
+    
+            message.className =
+                `message ${sender} ${type}`;
+    
             const avatar = document.createElement("div");
-
+    
             avatar.className = "avatar";
-
-
+    
             if (sender === "user") {
-
+    
                 avatar.textContent = "👤";
-
+    
             } else if (type === "error") {
-
+    
                 avatar.textContent = "⚠️";
-
+    
             } else {
-
+    
                 avatar.textContent = "🎓";
-
+    
             }
-
-
+    
             const bubble = document.createElement("div");
-
+    
             bubble.className = "bubble";
-
+    
             bubble.textContent = text;
-
-
+    
             if (sender === "user") {
-
+    
                 message.appendChild(bubble);
-
+    
                 message.appendChild(avatar);
-
+    
             } else {
-
+    
                 message.appendChild(avatar);
-
+    
                 message.appendChild(bubble);
-
+    
             }
-
-
+    
             chat.appendChild(message);
-
+    
             scrollToBottom();
-
+    
         }
-
-
+    
         // ==========================================
         // MOSTRAR CARREGAMENTO
         // ==========================================
-
+    
         function showLoading() {
-
-            const loadingMessage = document.createElement("div");
-
+    
+            const loadingMessage =
+                document.createElement("div");
+    
             loadingMessage.className = "message ai";
-
+    
             loadingMessage.id = "loadingMessage";
-
-
+    
             const avatar = document.createElement("div");
-
+    
             avatar.className = "avatar";
-
+    
             avatar.textContent = "🎓";
-
-
+    
             const bubble = document.createElement("div");
-
+    
             bubble.className = "bubble typing";
-
-
+    
             bubble.innerHTML = `
                 <span>Pensando</span>
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
             `;
-
-
+    
             loadingMessage.appendChild(avatar);
-
+    
             loadingMessage.appendChild(bubble);
-
-
+    
             chat.appendChild(loadingMessage);
-
+    
             scrollToBottom();
-
+    
         }
-
-
+    
         // ==========================================
         // REMOVER CARREGAMENTO
         // ==========================================
-
+    
         function removeLoading() {
-
-            const loadingMessage = document.getElementById("loadingMessage");
-
+    
+            const loadingMessage =
+                document.getElementById("loadingMessage");
+    
             if (loadingMessage) {
-
+    
                 loadingMessage.remove();
-
+    
             }
-
+    
         }
-
-
+    
         // ==========================================
         // ENVIAR MENSAGEM
         // ==========================================
-
+    
         async function sendMessage() {
-
+    
             const message = input.value.trim();
-
-
+    
             if (!message || loading) {
-
+    
                 return;
-
+    
             }
-
-
+    
             loading = true;
-
+    
             sendBtn.disabled = true;
-
+    
             input.disabled = true;
-
-
-            // MOSTRA A MENSAGEM DO USUÁRIO
-
+    
+            // Mostra mensagem do usuário
             addMessage(message, "user");
-
-
-            // ==========================================
-            // SALVA MENSAGEM DO USUÁRIO NO HISTÓRICO
-            // ==========================================
-
+    
+            // Salva mensagem do usuário
             messages.push({
-
+    
                 role: "user",
-
+    
                 content: message
-
+    
             });
-
-
+    
             input.value = "";
-
+    
             input.style.height = "auto";
-
-
-            // MOSTRA O INDICADOR DE CARREGAMENTO
-
+    
             showLoading();
-
-
+    
             try {
-
-                // ==========================================
-                // ENVIA MENSAGEM + HISTÓRICO PARA O BACKEND
-                // ==========================================
-
-                const response = await fetch( "/chat", 
-                    {
-
-                        method: "POST",
-
-                        headers: {
-
-                            "Content-Type": "application/json"
-
-                        },
-
-                        body: JSON.stringify({
-
-                            mensagem: message,
-
-                            historico: messages
-
-                        })
-
-                    }
-                );
-
-
-                const data = await response.json();
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        data.error || "Erro ao comunicar com a API."
-                    );
-
-                }
-
-
-                removeLoading();
-
-
-                // ==========================================
-                // MOSTRA RESPOSTA DA IA
-                // ==========================================
-
-                addMessage(data.response, "ai");
-
-
-                // ==========================================
-                // SALVA RESPOSTA DA IA NO HISTÓRICO
-                // ==========================================
-
-                messages.push({
-
-                    role: "assistant",
-
-                    content: data.response
-
+    
+                const response = await fetch("/chat", {
+    
+                    method: "POST",
+    
+                    headers: {
+    
+                        "Content-Type": "application/json"
+    
+                    },
+    
+                    body: JSON.stringify({
+    
+                        mensagem: message,
+    
+                        historico: messages
+    
+                    })
+    
                 });
-
-
-            } catch (error) {
-
+    
+                // Verifica se a resposta é JSON
+                const data = await response.json();
+    
+                if (!response.ok) {
+    
+                    throw new Error(
+    
+                        data.error ||
+                        "Erro ao comunicar com o servidor."
+    
+                    );
+    
+                }
+    
                 removeLoading();
-
-
+    
+                // Mostra resposta da IA
+                addMessage(data.response, "ai");
+    
+                // Salva resposta da IA
+                messages.push({
+    
+                    role: "assistant",
+    
+                    content: data.response
+    
+                });
+    
+            } catch (error) {
+    
+                removeLoading();
+    
                 addMessage(
-
+    
                     "Não consegui me conectar ao servidor. Verifique se o backend está funcionando e tente novamente.",
-
+    
                     "ai",
-
+    
                     "error"
-
+    
                 );
-
-
+    
                 console.error("Erro:", error);
-
-
+    
             } finally {
-
+    
                 loading = false;
-
+    
                 sendBtn.disabled = false;
-
+    
                 input.disabled = false;
-
+    
                 input.focus();
-
+    
             }
-
+    
         }
-
-
+    
         // ==========================================
         // NOVA CONVERSA
         // ==========================================
-
+    
         function newConversation() {
-
-            // LIMPA TODO O HISTÓRICO
-
+    
             messages = [];
-
-
-            // LIMPA AS MENSAGENS DA TELA
-
+    
             chat.innerHTML = `
-
+    
                 <div class="welcome" id="welcome">
-
+    
                     <div class="emoji">📚</div>
-
+    
                     <h2>Nova conversa iniciada!</h2>
-
+    
                     <p>
                         Estou pronto para ajudar você exclusivamente
                         com assuntos relacionados aos estudos.
                     </p>
-
+    
                 </div>
-
+    
             `;
-
-
+    
             input.focus();
-
+    
         }
-
-
+    
         // ==========================================
         // BOTÃO ENVIAR
         // ==========================================
-
+    
         sendBtn.addEventListener(
-
+    
             "click",
-
+    
             sendMessage
-
+    
         );
-
-
+    
         // ==========================================
-        // ENVIAR COM ENTER
+        // ENTER PARA ENVIAR
         // ==========================================
-
+    
         input.addEventListener(
-
+    
             "keydown",
-
+    
             (event) => {
-
+    
                 if (
-
-                    event.key === "Enter"
-
-                    &&
-
+    
+                    event.key === "Enter" &&
+    
                     !event.shiftKey
-
+    
                 ) {
-
+    
                     event.preventDefault();
-
+    
                     sendMessage();
-
+    
                 }
-
+    
             }
-
+    
         );
-
-
+    
         // ==========================================
-        // AUMENTAR TAMANHO DO CAMPO DE TEXTO
+        // AUMENTAR CAMPO DE TEXTO
         // ==========================================
-
+    
         input.addEventListener(
-
+    
             "input",
-
+    
             () => {
-
+    
                 input.style.height = "auto";
-
+    
                 input.style.height =
                     Math.min(input.scrollHeight, 130) + "px";
-
+    
             }
-
+    
         );
-
-
+    
         // ==========================================
-        // BOTÃO NOVA CONVERSA
+        // NOVA CONVERSA
         // ==========================================
-
+    
         newChatBtn.addEventListener(
-
+    
             "click",
-
+    
             newConversation
-
+    
         );
-
-
+    
         // ==========================================
-        // MODO CLARO / ESCURO
+        // TEMA CLARO / ESCURO
         // ==========================================
-
+    
         themeBtn.addEventListener(
-
+    
             "click",
-
+    
             () => {
-
+    
                 document.body.classList.toggle("dark");
-
-
-                if (document.body.classList.contains("dark")) {
-
+    
+                if (
+                    document.body.classList.contains("dark")
+                ) {
+    
                     themeBtn.innerHTML =
                         '☀️ <span>Tema</span>';
-
+    
                 } else {
-
+    
                     themeBtn.innerHTML =
                         '🌙 <span>Tema</span>';
-
+    
                 }
-
+    
             }
-
+    
         );
-
-
+    
         // ==========================================
         // BOTÕES DE SUGESTÃO
         // ==========================================
-
+    
         document.querySelectorAll(".suggestion").forEach(
-
+    
             button => {
-
+    
                 button.addEventListener(
-
+    
                     "click",
-
+    
                     () => {
-
-                        input.value = button.textContent;
-
+    
+                        input.value =
+                            button.textContent.trim();
+    
                         sendMessage();
-
+    
                     }
-
+    
                 );
-
+    
             }
-
+    
         );
-
+    
     </script>
-
-</body>
-
-</html>
