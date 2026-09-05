@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>StudyMind | Assistente Virtual de Estudos</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #f4f7fb;
+            --panel: #ffffff;
+            --primary: #4f46e5;
+            --primary2: #7c3aed;
+            --text: #172033;
+            --muted: #667085;
+            --border: #e4e7ec;
+            --user: #4f46e5;
+            --ai: #eef2ff;
+        }
+
+        body.dark {
+            --bg: #101522;
+            --panel: #182033;
+            --text: #f5f7ff;
+            --muted: #aeb8cf;
+            --border: #2b3650;
+            --ai: #232d48;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, var(--bg), #dfe7ff);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        body.dark {
+            background: linear-gradient(135deg, #0d1220, #171d32);
+        }
+
+        .app {
+            width: min(100%, 1000px);
+            height: min(92vh, 760px);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 18px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary2));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 30px;
+            background: rgba(255, 255, 255, .16);
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        h1 {
+            font-size: 20px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            opacity: .85;
+            margin-top: 3px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: .2s;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            filter: brightness(.97);
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, .18);
+            color: white;
+        }
+
+        .chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: var(--bg);
+        }
+
+        .welcome {
+            text-align: center;
+            padding: 35px 15px;
+            color: var(--muted);
+        }
+
+        .welcome .emoji {
+            font-size: 50px;
+            margin-bottom: 12px;
+        }
+
+        .welcome h2 {
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .suggestion {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-weight: normal;
+            font-size: 13px;
+        }
+
+        .message {
+            display: flex;
+            margin: 14px 0;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            flex: none;
+            background: var(--ai);
+            font-size: 18px;
+        }
+
+        .bubble {
+            max-width: 76%;
+            padding: 13px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .ai .bubble {
+            background: var(--ai);
+            border-bottom-left-radius: 5px;
+        }
+
+        .user .bubble {
+            background: var(--user);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .error .bubble {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .typing {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            background: var(--muted);
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: .15s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: .3s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .input-area {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        textarea {
+            flex: 1;
+            resize: none;
+            min-height: 48px;
+            max-height: 130px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg);
+            color: var(--text);
+            outline: none;
+            font-family: inherit;
+            font-size: 15px;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+        }
+
+        #sendBtn {
+            background: var(--primary);
+            color: white;
+            height: 48px;
+            min-width: 105px;
+        }
+
+        #sendBtn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        @media(max-width:600px) {
+
+            body {
+                padding: 0;
+            }
+
+            .app {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .bubble {
+                max-width: 85%;
+            }
+
+            .subtitle {
+                display: none;
+            }
+
+            .header-btn {
+                padding: 9px;
+            }
+
+            .header-btn span {
+                display: none;
+            }
+
+            .chat {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="app">
+
+        <header>
+
+            <div class="brand">
+
+                <div class="logo">🎓</div>
+
+                <div>
+                    <h1>StudyMind</h1>
+
+                    <div class="subtitle">
+                        Assistente Virtual Inteligente para Estudos
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="actions">
+
+                <button class="header-btn" id="themeBtn">
+                    🌙 <span>Tema</span>
+                </button>
+
+                <button class="header-btn" id="newChatBtn">
+                    ➕ <span>Nova Conversa</span>
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <section class="chat" id="chat">
+
+            <div class="welcome" id="welcome">
+
+                <div class="emoji">📚</div>
+
+                <h2>Olá! Eu sou o StudyMind.</h2>
+
+                <p>
+                    Sou um assistente criado exclusivamente para ajudar você a estudar.
+                    <br>
+                    Posso explicar conteúdos, criar exercícios, resumos e planos de estudo.
+                </p>
+
+                <div class="suggestions">
+
+                    <button class="suggestion">
+                        Explique porcentagem
+                    </button>
+
+                    <button class="suggestion">
+                        Crie exercícios de matemática
+                    </button>
+
+                    <button class="suggestion">
+                        Faça um resumo sobre fotossíntese
+                    </button>
+
+                    <button class="suggestion">
+                        Monte um plano de estudos
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <div class="input-area">
+
+            <div class="input-row">
+
+                <textarea
+                    id="messageInput"
+                    placeholder="Digite uma dúvida sobre estudos..."
+                    rows="1"></textarea>
+
+                <button id="sendBtn">
+                    Enviar ➤
+                </button>
+
+            </div>
+
+            <div class="footer-note">
+                Pressione Enter para enviar • Shift + Enter para quebrar linha
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <script>
+
+        // ==========================================
+        // HISTÓRICO DA CONVERSA
+        // ==========================================
+
+        let messages = [];
+
+        let loading = false;
+
+
+        // ==========================================
+        // ELEMENTOS DO HTML
+        // ==========================================
+
+        const chat = document.getElementById("chat");
+
+        const input = document.getElementById("messageInput");
+
+        const sendBtn = document.getElementById("sendBtn");
+
+        const newChatBtn = document.getElementById("newChatBtn");
+
+        const themeBtn = document.getElementById("themeBtn");
+
+        const welcome = document.getElementById("welcome");
+
+
+        // ==========================================
+        // ROLAR CHAT PARA BAIXO
+        // ==========================================
+
+        function scrollToBottom() {
+
+            chat.scrollTop = chat.scrollHeight;
+
+        }
+
+
+        // ==========================================
+        // ADICIONAR MENSAGEM NA TELA
+        // ==========================================
+
+        function addMessage(text, sender, type = "") {
+
+            const welcomeElement = document.getElementById("welcome");
+
+            if (welcomeElement) {
+                welcomeElement.style.display = "none";
+            }
+
+            const message = document.createElement("div");
+
+            message.className = `message ${sender} ${type}`;
+
+
+            const avatar = document.createElement("div");
+
+            avatar.className = "avatar";
+
+
+            if (sender === "user") {
+
+                avatar.textContent = "👤";
+
+            } else if (type === "error") {
+
+                avatar.textContent = "⚠️";
+
+            } else {
+
+                avatar.textContent = "🎓";
+
+            }
+
+
+            const bubble = document.createElement("div");
+
+            bubble.className = "bubble";
+
+            bubble.textContent = text;
+
+
+            if (sender === "user") {
+
+                message.appendChild(bubble);
+
+                message.appendChild(avatar);
+
+            } else {
+
+                message.appendChild(avatar);
+
+                message.appendChild(bubble);
+
+            }
+
+
+            chat.appendChild(message);
+
+            scrollToBottom();
+
+        }
+
+
+        // ==========================================
+        // MOSTRAR CARREGAMENTO
+        // ==========================================
+
+        function showLoading() {
+
+            const loadingMessage = document.createElement("div");
+
+            loadingMessage.className = "message ai";
+
+            loadingMessage.id = "loadingMessage";
+
+
+            const avatar = document.createElement("div");
+
+            avatar.className = "avatar";
+
+            avatar.textContent = "🎓";
+
+
+            const bubble = document.createElement("div");
+
+            bubble.className = "bubble typing";
+
+
+            bubble.innerHTML = `
+                <span>Pensando</span>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            `;
+
+
+            loadingMessage.appendChild(avatar);
+
+            loadingMessage.appendChild(bubble);
+
+
+            chat.appendChild(loadingMessage);
+
+            scrollToBottom();
+
+        }
+
+
+        // ==========================================
+        // REMOVER CARREGAMENTO
+        // ==========================================
+
+        function removeLoading() {
+
+            const loadingMessage = document.getElementById("loadingMessage");
+
+            if (loadingMessage) {
+
+                loadingMessage.remove();
+
+            }
+
+        }
+
+
+        // ==========================================
+        // ENVIAR MENSAGEM
+        // ==========================================
+
+        async function sendMessage() {
+
+            const message = input.value.trim();
+
+
+            if (!message || loading) {
+
+                return;
+
+            }
+
+
+            loading = true;
+
+            sendBtn.disabled = true;
+
+            input.disabled = true;
+
+
+            // MOSTRA A MENSAGEM DO USUÁRIO
+
+            addMessage(message, "user");
+
+
+            // ==========================================
+            // SALVA MENSAGEM DO USUÁRIO NO HISTÓRICO
+            // ==========================================
+
+            messages.push({
+
+                role: "user",
+
+                content: message
+
+            });
+
+
+            input.value = "";
+
+            input.style.height = "auto";
+
+
+            // MOSTRA O INDICADOR DE CARREGAMENTO
+
+            showLoading();
+
+
+            try {
+
+                // ==========================================
+                // ENVIA MENSAGEM + HISTÓRICO PARA O BACKEND
+                // ==========================================
+
+                const response = await fetch(
+                    "http://localhost:3000/chat",
+                    {
+
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type": "application/json"
+
+                        },
+
+                        body: JSON.stringify({
+
+                            mensagem: message,
+
+                            historico: messages
+
+                        })
+
+                    }
+                );
+
+
+                const data = await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error || "Erro ao comunicar com a API."
+                    );
+
+                }
+
+
+                removeLoading();
+
+
+                // ==========================================
+                // MOSTRA RESPOSTA DA IA
+                // ==========================================
+
+                addMessage(data.response, "ai");
+
+
+                // ==========================================
+                // SALVA RESPOSTA DA IA NO HISTÓRICO
+                // ==========================================
+
+                messages.push({
+
+                    role: "assistant",
+
+                    content: data.response
+
+                });
+
+
+            } catch (error) {
+
+                removeLoading();
+
+
+                addMessage(
+
+                    "Não consegui me conectar ao servidor. Verifique se o backend está funcionando e tente novamente.",
+
+                    "ai",
+
+                    "error"
+
+                );
+
+
+                console.error("Erro:", error);
+
+
+            } finally {
+
+                loading = false;
+
+                sendBtn.disabled = false;
+
+                input.disabled = false;
+
+                input.focus();
+
+            }
+
+        }
+
+
+        // ==========================================
+        // NOVA CONVERSA
+        // ==========================================
+
+        function newConversation() {
+
+            // LIMPA TODO O HISTÓRICO
+
+            messages = [];
+
+
+            // LIMPA AS MENSAGENS DA TELA
+
+            chat.innerHTML = `
+
+                <div class="welcome" id="welcome">
+
+                    <div class="emoji">📚</div>
+
+                    <h2>Nova conversa iniciada!</h2>
+
+                    <p>
+                        Estou pronto para ajudar você exclusivamente
+                        com assuntos relacionados aos estudos.
+                    </p>
+
+                </div>
+
+            `;
+
+
+            input.focus();
+
+        }
+
+
+        // ==========================================
+        // BOTÃO ENVIAR
+        // ==========================================
+
+        sendBtn.addEventListener(
+
+            "click",
+
+            sendMessage
+
+        );
+
+
+        // ==========================================
+        // ENVIAR COM ENTER
+        // ==========================================
+
+        input.addEventListener(
+
+            "keydown",
+
+            (event) => {
+
+                if (
+
+                    event.key === "Enter"
+
+                    &&
+
+                    !event.shiftKey
+
+                ) {
+
+                    event.preventDefault();
+
+                    sendMessage();
+
+                }
+
+            }
+
+        );
+
+
+        // ==========================================
+        // AUMENTAR TAMANHO DO CAMPO DE TEXTO
+        // ==========================================
+
+        input.addEventListener(
+
+            "input",
+
+            () => {
+
+                input.style.height = "auto";
+
+                input.style.height =
+                    Math.min(input.scrollHeight, 130) + "px";
+
+            }
+
+        );
+
+
+        // ==========================================
+        // BOTÃO NOVA CONVERSA
+        // ==========================================
+
+        newChatBtn.addEventListener(
+
+            "click",
+
+            newConversation
+
+        );
+
+
+        // ==========================================
+        // MODO CLARO / ESCURO
+        // ==========================================
+
+        themeBtn.addEventListener(
+
+            "click",
+
+            () => {
+
+                document.body.classList.toggle("dark");
+
+
+                if (document.body.classList.contains("dark")) {
+
+                    themeBtn.innerHTML =
+                        '☀️ <span>Tema</span>';
+
+                } else {
+
+                    themeBtn.innerHTML =
+                        '🌙 <span>Tema</span>';
+
+                }
+
+            }
+
+        );
+
+
+        // ==========================================
+        // BOTÕES DE SUGESTÃO
+        // ==========================================
+
+        document.querySelectorAll(".suggestion").forEach(
+
+            button => {
+
+                button.addEventListener(
+
+                    "click",
+
+                    () => {
+
+                        input.value = button.textContent;
+
+                        sendMessage();
+
+                    }
+
+                );
+
+            }
+
+        );
+
+    </script>
+
+</body>
+
+</html>
